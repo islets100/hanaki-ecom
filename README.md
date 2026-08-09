@@ -29,8 +29,8 @@ AI_DASHSCOPE_API_KEY=your-dashscope-key
 # cd server && ./mvnw spring-boot:run
 
 # 终端 2：前端
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 访问 `http://localhost:3000`。后端健康检查：`http://localhost:8080/api/v1/health`。
