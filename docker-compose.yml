@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: hanaki
+      POSTGRES_USER: hanaki
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hanaki -d hanaki"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+  backend:
+    build: ./server
+    environment:
+      AI_DASHSCOPE_API_KEY: ${AI_DASHSCOPE_API_KEY:?请先配置 AI_DASHSCOPE_API_KEY}
+      AI_CHAT_MODEL: ${AI_CHAT_MODEL:-qwen-plus}
+      AI_EMBEDDING_MODEL: ${AI_EMBEDDING_MODEL:-text-embedding-v3}
+      CONFIRM_SECRET: ${CONFIRM_SECRET:?set CONFIRM_SECRET}
+      STORE_AGENT_INVITE_CODE: ${STORE_AGENT_INVITE_CODE:?set STORE_AGENT_INVITE_CODE}
+      OFFICIAL_AGENT_INVITE_CODE: ${OFFICIAL_AGENT_INVITE_CODE:?set OFFICIAL_AGENT_INVITE_CODE}
+      AUTH_SESSION_HOURS: ${AUTH_SESSION_HOURS:-24}
+      AGENT_REDIS_ENABLED: ${AGENT_REDIS_ENABLED:-false}
+      AGENT_REDIS_HOST: ${AGENT_REDIS_HOST:-host.docker.internal}
+      AGENT_REDIS_PORT: ${AGENT_REDIS_PORT:-6379}
+      AGENT_REDIS_PASSWORD: ${AGENT_REDIS_PASSWORD:-}
+      AGENT_ELASTICSEARCH_ENABLED: ${AGENT_ELASTICSEARCH_ENABLED:-false}
+      AGENT_ELASTICSEARCH_URL: ${AGENT_ELASTICSEARCH_URL:-http://host.docker.internal:9200}
+      AGENT_RERANK_ENABLED: ${AGENT_RERANK_ENABLED:-false}
+      DATABASE_URL: jdbc:postgresql://postgres:5432/hanaki
+      DATABASE_USER: hanaki
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports: ["8080:8080"]
+  frontend:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+    depends_on: [backend]
+    ports: ["3000:3000"]
+volumes:
+  postgres-data:
