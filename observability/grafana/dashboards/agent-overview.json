@@ -1,0 +1,158 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {"title": "打开 Agent Trace 回放", "type": "link", "url": "http://localhost:3000/observability", "targetBlank": true}
+  ],
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Agent 运行次数",
+      "gridPos": {"x": 0, "y": 0, "w": 4, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [{"expr": "sum(agent_run_total)", "legendFormat": "运行"}]
+    },
+    {
+      "id": 2, "type": "stat", "title": "模型 Token 总量",
+      "gridPos": {"x": 4, "y": 0, "w": 4, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [{"expr": "sum(agent_model_tokens_total)", "legendFormat": "Token"}]
+    },
+    {
+      "id": 3, "type": "stat", "title": "模型成本（CNY）",
+      "gridPos": {"x": 8, "y": 0, "w": 4, "h": 4},
+      "fieldConfig": {"defaults": {"unit": "currencyCNY"}, "overrides": []},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [{"expr": "sum(agent_model_cost_cny_total)", "legendFormat": "成本"}]
+    },
+    {
+      "id": 4, "type": "stat", "title": "错误总数",
+      "gridPos": {"x": 12, "y": 0, "w": 4, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [{"expr": "sum(agent_errors_total)", "legendFormat": "错误"}]
+    },
+    {
+      "id": 5, "type": "stat", "title": "多候选评审批次",
+      "gridPos": {"x": 16, "y": 0, "w": 4, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [{"expr": "sum(agent_evaluation_batch_total{result=\"started\"})", "legendFormat": "批次"}]
+    },
+    {
+      "id": 6, "type": "stat", "title": "需要人工复核",
+      "gridPos": {"x": 20, "y": 0, "w": 4, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [{"expr": "sum(agent_evaluation_batch_total{result=\"needs_review\"})", "legendFormat": "待复核"}]
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "模型调用速率与 P95 耗时",
+      "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [
+        {"expr": "sum by (stage) (rate(agent_model_duration_seconds_count[5m]))", "legendFormat": "{{stage}} QPS"},
+        {"expr": "histogram_quantile(0.95, sum by (le) (rate(agent_model_duration_seconds_bucket[5m])))", "legendFormat": "模型 P95 秒"}
+      ]
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "输入 / 输出 Token 速率",
+      "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [{"expr": "sum by (direction) (rate(agent_model_tokens_total[5m]))", "legendFormat": "{{direction}}"}]
+    },
+    {
+      "id": 9, "type": "timeseries", "title": "Best-of-3 分支状态",
+      "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [{"expr": "sum by (candidate, result) (rate(agent_evaluation_candidate_total[5m]))", "legendFormat": "候选 {{candidate}} · {{result}}"}]
+    },
+    {
+      "id": 10, "type": "timeseries", "title": "Best-of-3 候选 Token 增量",
+      "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [{"expr": "sum by (candidate, direction) (rate(agent_evaluation_candidate_tokens_total[5m]))", "legendFormat": "候选 {{candidate}} · {{direction}}"}]
+    },
+    {
+      "id": 11, "type": "timeseries", "title": "节点耗时排行",
+      "gridPos": {"x": 0, "y": 20, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [{"expr": "topk(10, sum by (node) (rate(agent_node_duration_seconds_sum[5m])) / clamp_min(sum by (node) (rate(agent_node_duration_seconds_count[5m])), 0.001))", "legendFormat": "{{node}}"}]
+    },
+    {
+      "id": 12, "type": "timeseries", "title": "工具调用与异常原因",
+      "gridPos": {"x": 12, "y": 20, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [
+        {"expr": "sum by (tool, result) (rate(agent_tool_calls_total[5m]))", "legendFormat": "工具 {{tool}} · {{result}}"},
+        {"expr": "sum by (errorCategory) (rate(agent_errors_total[5m]))", "legendFormat": "错误 {{errorCategory}}"}
+      ]
+    },
+    {
+      "id": 13, "type": "timeseries", "title": "两级缓存命中情况",
+      "gridPos": {"x": 0, "y": 28, "w": 8, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [{"expr": "sum by (level, result) (rate(agent_cache_access_total[5m]))", "legendFormat": "{{level}} · {{result}}"}]
+    },
+    {
+      "id": 14, "type": "timeseries", "title": "检索与重排适配器",
+      "gridPos": {"x": 8, "y": 28, "w": 8, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [
+        {"expr": "sum by (result) (rate(agent_rag_elasticsearch_requests_total[5m]))", "legendFormat": "ES · {{result}}"},
+        {"expr": "sum by (result) (rate(agent_rag_rerank_requests_total[5m]))", "legendFormat": "Rerank · {{result}}"}
+      ]
+    },
+    {
+      "id": 15, "type": "timeseries", "title": "知识 Outbox 投递",
+      "gridPos": {"x": 16, "y": 28, "w": 8, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [{"expr": "sum by (result) (rate(agent_knowledge_outbox_total[5m]))", "legendFormat": "{{result}}"}]
+    },
+    {
+      "id": 16, "type": "timeseries", "title": "评审降级原因",
+      "gridPos": {"x": 0, "y": 36, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [{"expr": "sum by (reason) (rate(agent_evaluation_fallback_total[5m]))", "legendFormat": "{{reason}}"}]
+    },
+    {
+      "id": 17, "type": "timeseries", "title": "遥测导出健康度",
+      "gridPos": {"x": 12, "y": 36, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [
+        {"expr": "sum(rate(agent_telemetry_exported_spans_total[5m]))", "legendFormat": "已导出 Span/s"},
+        {"expr": "sum by (reason) (rate(agent_telemetry_export_failures_total[5m]))", "legendFormat": "失败 · {{reason}}"},
+        {"expr": "sum by (reason) (rate(agent_telemetry_dropped_spans_total[5m]))", "legendFormat": "丢弃 · {{reason}}"}
+      ]
+    },
+    {
+      "id": 18, "type": "timeseries", "title": "情景记忆向量索引",
+      "gridPos": {"x": 0, "y": 44, "w": 8, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [{"expr": "sum by (result) (rate(agent_memory_elasticsearch_requests_total[5m]))", "legendFormat": "Memory ES · {{result}}"}]
+    },
+    {
+      "id": 19, "type": "timeseries", "title": "消息幂等与租约恢复",
+      "gridPos": {"x": 8, "y": 44, "w": 8, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [{"expr": "sum by (result) (rate(agent_request_dedup_total[5m]))", "legendFormat": "{{result}}"}]
+    },
+    {
+      "id": 20, "type": "timeseries", "title": "业务状态迁移与 Outbox 积压",
+      "gridPos": {"x": 16, "y": 44, "w": 8, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "hanaki-prometheus"},
+      "targets": [
+        {"expr": "sum by (result) (rate(agent_business_task_transitions_total[5m]))", "legendFormat": "状态机 · {{result}}"},
+        {"expr": "agent_outbox_backlog", "legendFormat": "Outbox backlog"}
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": ["agent", "opentelemetry", "best-of-three", "ecommerce"],
+  "templating": {"list": []},
+  "time": {"from": "now-1h", "to": "now"},
+  "timezone": "browser",
+  "title": "花木商城 · Agent 全链路观测",
+  "uid": "hanaki-agent-overview",
+  "version": 3
+}
