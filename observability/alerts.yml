@@ -1,0 +1,50 @@
+groups:
+  - name: hanaki-agent-runtime
+    rules:
+      - alert: HanakiAgentBackendDown
+        expr: up{job="hanaki-ecom-agent"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations:
+          summary: "花木商城 Agent 后端不可采集"
+          description: "Prometheus 连续 2 分钟无法抓取后端指标。"
+
+      - alert: HanakiAgentModelErrorRateHigh
+        expr: sum(rate(agent_model_error_total[5m])) / clamp_min(sum(rate(agent_model_duration_seconds_count[5m])), 0.001) > 0.10
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "模型调用错误率超过 10%"
+          description: "请按 Trace 检查模型网关、限流、超时和结构化输出解析。"
+
+      - alert: HanakiAgentOutboxDeadLetter
+        expr: sum(increase(agent_knowledge_outbox_total{result="dead_letter"}[10m])) > 0
+        for: 1m
+        labels: {severity: critical}
+        annotations:
+          summary: "知识或 Memory Outbox 出现死信"
+          description: "至少一个异步事件耗尽重试，需要人工查看 last_error 并补偿。"
+
+      - alert: HanakiAgentOutboxBacklogHigh
+        expr: agent_outbox_backlog > 100
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "Outbox 积压超过 100"
+          description: "检查 Worker、Embedding、Elasticsearch 和缓存失效链路。"
+
+      - alert: HanakiAgentTelemetryExportFailures
+        expr: sum(increase(agent_telemetry_export_failures_total[10m])) > 10
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "OTLP 遥测导出持续失败"
+          description: "本地回放仍可用，但 Langfuse 链路可能不完整。"
+
+      - alert: HanakiAgentMemoryIndexFailureRateHigh
+        expr: sum(rate(agent_memory_elasticsearch_requests_total{result="failure"}[10m])) / clamp_min(sum(rate(agent_memory_elasticsearch_requests_total[10m])), 0.001) > 0.20
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "情景记忆 Elasticsearch 失败率超过 20%"
+          description: "主链路会降级到数据库向量召回，但需检查索引、维度和网络。"

@@ -1,0 +1,28 @@
+receivers:
+  otlp:
+    protocols:
+      grpc: {endpoint: 0.0.0.0:4317}
+      http: {endpoint: 0.0.0.0:4318}
+processors:
+  memory_limiter: {check_interval: 5s, limit_mib: 384, spike_limit_mib: 96}
+  attributes/privacy:
+    actions:
+      - {key: http.request.header.authorization, action: delete}
+      - {key: http.request.header.cookie, action: delete}
+      - {key: enduser.id, action: hash}
+  batch: {timeout: 2s, send_batch_size: 512}
+exporters:
+  otlphttp/langfuse:
+    endpoint: http://langfuse-web:3000/api/public/otel
+    headers:
+      Authorization: "Basic cGstbGYtb2JzaWRpYW4tbG9jYWw6c2stbGYtb2JzaWRpYW4tbG9jYWwtc2VjcmV0"
+      x-langfuse-ingestion-version: "4"
+    sending_queue: {enabled: true, num_consumers: 4, queue_size: 4096}
+    retry_on_failure: {enabled: true, initial_interval: 1s, max_interval: 15s, max_elapsed_time: 60s}
+  debug: {verbosity: basic}
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, attributes/privacy, batch]
+      exporters: [otlphttp/langfuse, debug]
