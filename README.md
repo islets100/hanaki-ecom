@@ -1,6 +1,6 @@
 # 花木商城：电商多智能体客服平台
 
-这是根据四份需求资料与八张流程图实现的完整示例，包含 PC 电商前端、Spring Boot 后端、Spring AI Alibaba Graph 主流程、售前/售中/售后/投诉四个业务 Agent、全链路风控、混合 RAG、会话记忆、检查点、业务任务确认与 Best-of-3 Judge。
+包含 PC 电商前端、Spring Boot 后端、Spring AI Alibaba Graph 主流程、售前/售中/售后/投诉四个业务 Agent、全链路风控、混合 RAG、会话记忆、检查点、业务任务确认与 Best-of-3 Judge。
 
 ## 一键启动
 
